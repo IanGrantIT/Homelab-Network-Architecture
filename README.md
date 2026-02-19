@@ -2,94 +2,91 @@
 
 ## Overview
 
-This homelab simulates a small secure network environment designed to demonstrate practical IT support, network configuration, and security fundamentals.
+This homelab simulates a layered, security-focused network environment designed to demonstrate practical IT support, firewall configuration, segmentation, and secure remote access.
 
 Core components include:
 
-- Segmented lab network behind OPNsense firewall
-- Raspberry Pi 4 acting as internal server
-- Network surveillance cameras on isolated segment
+- AT&T Gateway performing NAT (Layer 1)
+- OPNsense firewall performing internal NAT (Layer 2)
+- Segmented LAN behind OPNsense
+- Raspberry Pi 4 acting as internal web server
+- Network surveillance cameras on isolated VLAN
 - Cloudflare Tunnel for secure external access
 - Backup ISP WiFi connection (separate SSID)
 
-This environment is used to practice real-world troubleshooting, firewall management, network segmentation, and secure remote access configuration.
-
----
+This environment is used to practice real-world troubleshooting, firewall management, subnetting, VLAN segmentation, and secure remote access configuration.
 
 ## Physical & Logical Topology
 
 ```
-Internet → ISP Modem
-            ↓
-      OPNsense (MacBook)
-            ↓
-        ├── LAN (Homelab WiFi)
-        │     ├── Raspberry Pi 4 (Web Server)
-        │     ├── Printer
-        │     └── External HDD
-        │
-        └── Camera VLAN
-              ├── Network Camera 1
-              └── Network Camera 2
+Internet
+   ↓
+AT&T Gateway (NAT #1)
+   ├── Backup WiFi (ISP SSID)
+   │     └── WiFi Devices (Fallback Network)
+   ↓
+OPNsense Firewall (NAT #2)
+   ├── LAN (10.0.0.0/24)
+   │     ├── Raspberry Pi 4
+   │     ├── Printer
+   │     └── External HDD
+   │
+   ├── Camera VLAN (10.0.10.0/24)
+   │     ├── Camera 1
+   │     └── Camera 2
+   │
+   └── WireGuard VPN (Remote Access Endpoint)
+
+Raspberry Pi → Encrypted Tunnel → Cloudflare
+→ Internet Users
 ```
----
 
 ## Security & Network Design Principles
 
-This lab follows several foundational security and networking practices:
+This lab follows foundational networking and security practices:
 
-- Network segmentation between LAN devices and camera/IoT devices
+- Dual-layer NAT architecture
+- Network segmentation between LAN and camera/IoT devices
 - OPNsense firewall managing routing and access control
 - No direct public port forwarding
 - Secure outbound-only remote access using Cloudflare Tunnel
-- Separate SSID for backup ISP connection
 - Private subnet addressing for internal services
-- Logical separation of WAN, LAN, and device segments
+- Logical separation of WAN, LAN, and VLAN segments
 
-These principles mirror real-world small business and enterprise network architecture concepts.
+These principles mirror small business and enterprise network architecture concepts.
 
 ---
 
 ## Skills Demonstrated
 
-This homelab demonstrates hands-on experience with:
-
 ### Networking
+
 - Firewall configuration (OPNsense)
 - WAN/LAN interface configuration
-- Basic network segmentation concepts
+- VLAN segmentation concepts
+- Understanding NAT boundaries
 - Wireless access point configuration
-- ISP failover awareness and backup connectivity planning
+- Backup ISP planning awareness
 
 ### Systems & Infrastructure
+
 - Raspberry Pi server setup and management
 - Hosting internal web services
-- Managing network-attached storage (External HDD)
-- Device connectivity troubleshooting
+- Managing network-attached storage
+- Cross-subnet connectivity troubleshooting
 
 ### Security
-- Reducing attack surface (no exposed ports)
+
+- Reducing attack surface (no exposed inbound ports)
 - Encrypted tunnel-based remote access
 - Isolating surveillance/IoT devices
-- Understanding layered network architecture
-
----
-
-## Troubleshooting & Practical Use Cases
-
-This lab environment supports practicing:
-
-- Diagnosing connectivity issues between LAN devices
-- Firewall rule testing and adjustment
-- Device isolation testing
-- Internal service availability checks
-- Remote access validation through secure tunnel
+- Layered network architecture design
 
 ---
 
 ## Career Objective
 
-This homelab is part of my ongoing development toward roles in:
+This homelab supports continued development toward:
 
 - IT Support / Helpdesk
 - Junior Network Administrator
