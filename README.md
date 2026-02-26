@@ -26,19 +26,46 @@ AT&T Gateway (NAT #1)
    │     └── WiFi Devices (Fallback Network)
    ↓
 OPNsense Firewall (NAT #2)
-   ├── LAN (10.0.0.0/24)
-   │     ├── Raspberry Pi 4
-   │     ├── Printer
-   │     └── External HDD
+   ├── LAN (10.0.0.0/24) 
+   │     ├── Switch (Netgear GS305E)
+   │          ├── GL.iNet AP (bridge mode)→ Wi-Fi
+   │          └──  Raspberry Pi 4 (DNS Requests)
+   │             ├── USB Printer
+   │             └── USB External HDD
    │
-   ├── Camera VLAN (10.0.10.0/24)
+   ├── Camera VLAN(ID: 10) (10.0.10.0/24)
    │     ├── Camera 1
    │     └── Camera 2
    │
+   ├── VPN Internet VLAN(ID: 50) (10.0.50.0/24)
+   │
    └── WireGuard VPN (Remote Access Endpoint)
 
-Raspberry Pi → Encrypted Tunnel → Cloudflare
+## Core Network Services:
+
+Raspberry Pi 4 → Encrypted Tunnel → Cloudflare
 → Internet Users
+  • Primary DNS Server (Pi-hole)
+  • Network-wide Ad Blocking
+  • DNS Sinkhole for tracking domains
+
+DNS Flow:
+  All VLANs
+      ↓
+  OPNsense DHCP (forces Pi as DNS)
+      ↓
+  Raspberry Pi (Pi-hole)
+      ↓
+  Upstream Resolver (Unbound / Cloudflare / ISP)
+
+## Port Plan (Netgear GS305E):
+
+| Port | Mode    | Assignment             |
+|------|---------|------------------------|
+| 1    | Trunk   | OPNsense Firewall      |
+| 2    | Access  | VLAN 1 → PC           |  
+| 3    | Access  | VLAN 1 → Raspberry Pi |
+| 4    | Trunk   | GL.iNet AP             |
 ```
 
 ## Security & Network Design Principles
