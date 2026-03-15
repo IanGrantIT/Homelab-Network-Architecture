@@ -6,13 +6,12 @@ This homelab simulates a layered, security-focused network environment designed 
 
 Core components include:
 
-- AT&T Gateway performing NAT (Layer 1)
-- OPNsense firewall performing internal NAT (Layer 2)
+- AT&T Gateway in Bridge Mode
+- OPNsense firewall
 - Segmented LAN behind OPNsense
 - Raspberry Pi 4 acting as internal web server
 - Network surveillance cameras on isolated VLAN
 - Cloudflare Tunnel for secure external access
-- Backup ISP WiFi connection (separate SSID)
 
 This environment is used to practice real-world troubleshooting, firewall management, subnetting, VLAN segmentation, and secure remote access configuration.
 
@@ -21,33 +20,38 @@ This environment is used to practice real-world troubleshooting, firewall manage
 ```
 Internet
    ↓
-AT&T Gateway (NAT #1)
-   ├── Backup WiFi (ISP SSID)
-   │     └── WiFi Devices (Fallback Network)
+Edge Network
    ↓
-OPNsense Firewall (NAT #2)
-   ├── LAN (10.0.0.0/24) 
-   │     ├── Switch (Netgear GS305E)
-   │          ├── GL.iNet AP (bridge mode)→ Wi-Fi
-   │          └──  Raspberry Pi 4 (DNS Requests)
-   │             ├── USB Printer
-   │             └── USB External HDD
+AT&T Gateway (Bridge mode)
+   ↓
+OPNsense Firewall (Wireguard VPN)
+   ├── LAN → Core Network (10.0.0.0/24)
+   │     └── Switch (Netgear GS305E)
+   │          ├── TP-Link EAP610 → Wi-Fi
+   │          ├──  Raspberry Pi 4 (Tailscale)
+   │             ├── Printer (CUPS)
+   │             ├──Web Server(Nginx,Cloudflare)
+   │             └──Pi-hole (DNS filtering)
+   │          └── Ubuntu Laptop (Mac A1466)
+   │            ├── Docker (Tailscale)
+   │            ├── Grafana
+   │            ├── Prometheus
+   │            ├── VPN container
+   │            ├── Media Server (Jellyfin)
+   │            └── External Hard Drive
    │
-   ├── Camera VLAN(ID: 10) (10.0.10.0/24)
+   ├── VLAN2→Security Cameras(ID: 20)(10.0.20.0/24)
    │     ├── Camera 1
    │     └── Camera 2
    │
-   ├── VPN Internet VLAN(ID: 50) (10.0.50.0/24)
+   ├── VLAN3→VPN Network(ID: 30)(10.0.30.0/24)
    │
-   └── WireGuard VPN (Remote Access Endpoint)
-
-## Core Network Services:
-
-Raspberry Pi 4 → Encrypted Tunnel → Cloudflare
-→ Internet Users
-  • Primary DNS Server (Pi-hole)
-  • Network-wide Ad Blocking
-  • DNS Sinkhole for tracking domains
+   │
+   └── VLAN4 → Servers (ID: 40) (10.0.40.0/24)
+         ├── Website
+         ├── Printer
+         ├── Jellyfin
+         └── External Hard Drive
 
 DNS Flow:
   All VLANs
@@ -57,30 +61,98 @@ DNS Flow:
   Raspberry Pi (Pi-hole)
       ↓
   Upstream Resolver (Unbound / Cloudflare / ISP)
-
-## Port Plan (Netgear GS305E):
-
-| Port | Mode    | Assignment             |
-|------|---------|------------------------|
-| 1    | Trunk   | OPNsense Firewall      |
-| 2    | Access  | VLAN 1 → PC           |  
-| 3    | Access  | VLAN 1 → Raspberry Pi |
-| 4    | Trunk   | GL.iNet AP             |
+  
+Remote Access Flow:
+  Remote Device (Laptop / Phone)
+      ↓
+  Encrypted Tunnel (WireGuard or Tailscale)
+      ↓
+  OPNsense Firewall
+      ↓
+  Internal VLAN Networks
+      ↓
+  Homelab Services (Pi-hole / Grafana / Jellyfin / Servers)
 ```
+## Example Traffic Flow
+
+### Example 1 — Client Browsing the Internet
+
+User Device (Wi-Fi or LAN)  
+↓  
+TP-Link EAP610 Access Point  
+↓  
+Netgear GS305E Switch  
+↓  
+OPNsense Firewall  
+↓  
+NAT Translation  
+↓  
+AT&T Gateway (Bridge Mode)  
+↓  
+Internet
+
+---
+
+### Example 2 — DNS Request
+
+Client Device  
+↓  
+OPNsense DHCP assigns Pi-hole as DNS server  
+↓  
+Raspberry Pi (Pi-hole DNS filtering)  
+↓  
+Upstream Resolver (Unbound / Cloudflare / ISP)  
+↓  
+Domain IP returned to client
+
+---
+
+### Example 3 — Remote VPN Access
+
+Remote Laptop / Phone  
+↓  
+Encrypted Tunnel (WireGuard or Tailscale)  
+↓  
+OPNsense Firewall  
+↓  
+Internal VLAN Network  
+↓  
+Access to services (Grafana / Jellyfin / Pi-hole)
+
+---
+
+### Example 4 — Public Website Access
+
+Internet User  
+↓  
+Cloudflare Network  
+↓  
+Cloudflare Tunnel  
+↓  
+Raspberry Pi Web Server (Nginx)  
+↓  
+Internal service response
+## Key Technologies
+
+• OPNsense Firewall  
+• VLAN Segmentation  
+• WireGuard VPN  
+• Tailscale Mesh VPN  
+• Pi-hole DNS Filtering  
+• Docker Containerization  
+• Prometheus + Grafana Monitoring  
+• Cloudflare Tunnel
 
 ## Security & Network Design Principles
 
 This lab follows foundational networking and security practices:
 
-- Dual-layer NAT architecture
-- Network segmentation between LAN and camera/IoT devices
+- Network segmentation between LAN, camera/IoT devices, and Servers
 - OPNsense firewall managing routing and access control
 - No direct public port forwarding
 - Secure outbound-only remote access using Cloudflare Tunnel
 - Private subnet addressing for internal services
 - Logical separation of WAN, LAN, and VLAN segments
-
-These principles mirror small business and enterprise network architecture concepts.
 
 ---
 
@@ -108,6 +180,7 @@ These principles mirror small business and enterprise network architecture conce
 - Encrypted tunnel-based remote access
 - Isolating surveillance/IoT devices
 - Layered network architecture design
+- Ad blocking/DNS filtering
 
 ---
 
@@ -115,9 +188,9 @@ These principles mirror small business and enterprise network architecture conce
 
 This homelab supports continued development toward:
 
-- IT Support / Helpdesk
 - Junior Network Administrator
 - Network Operations
+- Data Center Technician
 - Entry-Level Security-Focused IT Roles
 
 It reflects hands-on learning beyond theory and demonstrates practical application of networking and infrastructure concepts.
