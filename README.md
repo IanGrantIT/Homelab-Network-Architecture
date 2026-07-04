@@ -28,7 +28,6 @@ OPNsense Firewall (Wireguard VPN)
    ├── LAN → Core Network (10.0.0.0/24)
    │     ├── TP-Link EAP610 → Wi-Fi
    │     └── Switch (Netgear GS305E)
-
    │
    ├── VLAN2→Security Cameras(ID: 20)(10.0.20.0/24)
    │     ├── Camera 1
@@ -40,14 +39,13 @@ OPNsense Firewall (Wireguard VPN)
    └── VLAN4 → Servers (ID: 40) (10.0.40.0/24)
            ├──Raspberry Pi 4 
            |     ├── Printer (CUPS)
-           |     ├──Web Server(Nginx,Cloudflare)
+           |     ├── IT website Server(Nginx,Cloudflare)
            |     └──Pi-hole (DNS filtering)
            └── Ubuntu Laptop (Mac A1466)
-                 ├── Docker (Tailscale)
+                 ├── Docker
                  ├── Grafana
                  ├── Prometheus
                  ├── VPN container 
-                 ├── Jellyfin 
                  └── Media Server (Jellyfin)
 
 
